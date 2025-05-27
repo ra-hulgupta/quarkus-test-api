@@ -1,26 +1,3 @@
-
-/*import io.smallrye.mutiny.Uni;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
-import java.util.List;
-import io.quarkus.hibernate.reactive.panache.common.*;
-import com.product.model.Product;
-
-@Path("/products")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-public class ProductResource {
-
-    @GET
-    @WithSession
-    public Uni<List<Product>> getAll() {
-        return Product.listAll();
-    }
-}
-*/
 package com.product.api;
 
 import java.util.List;
@@ -52,7 +29,7 @@ import java.net.URI;
 public class ProductResource {
 
 	private static final Logger LOG = Logger.getLogger(ProductResource.class);
-	
+
 	@GET
 	public Uni<List<Product>> getAllProducts() {
 		return Product.listAll();
@@ -65,12 +42,6 @@ public class ProductResource {
 				.ifNull().continueWith(Response.status(Response.Status.NO_CONTENT).build());
 	}
 
-	/*
-	 * @POST public Uni<Response> create(Product product) { return product.persist()
-	 * .onItem().transform(inserted -> Response.created(URI.create("/products/" +
-	 * product.id)).build()); }
-	 */
-
 	@POST
 	public Uni<Response> create(Product product) {
 		return product.persist().onItem()
@@ -81,23 +52,19 @@ public class ProductResource {
 	@Path("/{id}")
 	public Uni<Response> update(@PathParam("id") Integer id, Product updatedProduct) {
 		System.out.println("Starting product fields in memory: " + updatedProduct.toString());
-	    return Product.<Product>findById(id)
-	        .onItem().ifNotNull().transformToUni(product -> {
-	            // Update in memory
-	            product.name = updatedProduct.name;
-	            product.description = updatedProduct.description;
-	            product.price = updatedProduct.price;
-	            product.quantity = updatedProduct.quantity;
+		return Product.<Product>findById(id).onItem().ifNotNull().transformToUni(product -> {
+			// Update in memory
+			product.name = updatedProduct.name;
+			product.description = updatedProduct.description;
+			product.price = updatedProduct.price;
+			product.quantity = updatedProduct.quantity;
 
-	            LOG.info("Updated product fields in memory: " + product);
+			LOG.info("Updated product fields in memory: " + product);
 
-	            // Now persist the change explicitly
-	            return product.flush()
-	                .replaceWith(Response.ok(product).build());
-	        })
-	        .onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
+			// Now persist the change explicitly
+			return product.flush().replaceWith(Response.ok(product).build());
+		}).onItem().ifNull().continueWith(Response.status(Response.Status.NOT_FOUND)::build);
 	}
-
 
 	@DELETE
 	@Path("/{id}")
